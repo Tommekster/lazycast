@@ -1,3 +1,4 @@
+
 This repository contains a fork of the original project available at https://github.com/homeworkc/lazycast, which I (`maxonthegit`) have made in order to apply a few convenience changes to startup scripts.
 ---
 
