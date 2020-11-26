@@ -126,7 +126,7 @@ echo "Miracast server ready - PIN code: $PIN"
 # which is connecting to this Raspberry)
 
 while : ; do
-	sudo wpa_cli -i ${P2P_DEV_INTERFACE} wps_pin any $PIN >/dev/null
+	sudo wpa_cli -i ${P2P_INTERFACE} wps_pin any $PIN >/dev/null
 	./d2.py
 done
 
