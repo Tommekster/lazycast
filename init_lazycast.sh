@@ -46,9 +46,9 @@ debug_log() {
 
 clear_everything() {
 	debug_log "Cleaning up..."
-	sudo pkill busybox
+	sudo pkill -f "busybox udhcpd"
+	pkill -f "python.*d2.py"
 	sudo wpa_cli -i ${P2P_DEV_INTERFACE} p2p_group_remove ${P2P_INTERFACE}
-	pkill -f d2.py
 	exit
 }
 
@@ -72,12 +72,12 @@ debug_log "Setting parameters..."
 while read WPA_COMMAND; do
 	sudo wpa_cli -i ${P2P_DEV_INTERFACE} $(echo $WPA_COMMAND | sed 's/#.*//')
 done << EOF
-p2p_find type=progessive
 set device_name $(hostname)		# Set reported P2P device name
 set device_type 7-0050F204-1		# Set device type as documented in https://web.mit.edu/freebsd/head/contrib/wpa/wpa_supplicant/README-P2P. Some device types are documented in https://web.mit.edu/freebsd/head/contrib/wpa/wpa_supplicant/wpa_supplicant.conf
 wfd_subelem_set 0 000600111c44012c
 wfd_subelem_set 1 0006000000000000
 wfd_subelem_set 6 000700000000000000
+set p2p_go_vht 0
 EOF
 
 # Persistent groups are such that "the devices forming the group store network
