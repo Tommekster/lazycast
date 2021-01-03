@@ -25,7 +25,7 @@ import sys
 import subprocess
 import argparse
 ##################### Settings #####################
-player_select = 2
+player_select = 1
 # 0: non-RPi systems. (using vlc or gstreamer)
 # 1: player1 has lower latency.
 # 2: player2 handles still images and sound better.
