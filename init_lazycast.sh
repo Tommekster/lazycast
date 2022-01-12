@@ -14,7 +14,7 @@
 DEBUG=0
 PIN=$(cat PIN)
 
-
+export LD_LIBRARY_PATH=/opt/vc/lib
 
 
 [ "$DEBUG" = "1" ] && set -x

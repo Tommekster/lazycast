@@ -1,5 +1,14 @@
 This repository contains a fork of the original project available at https://github.com/homeworkc/lazycast, which I (`maxonthegit`) have made in order to apply a few convenience changes to startup scripts.
 
+# Notes about building on Raspberry Pi OS Bullseye
+Changes occurred in recent releases of Raspberry Pi OS impose executing additional steps to properly build all the required utilities (some of these steps are inspired to https://github.com/homeworkc/lazycast/issues/100):
+```
+git clone https://github.com/raspberrypi/userland
+sudo apt install cmake
+cd userland
+./buildme
+```
+
 ---
 
 lazycast: A Simple Wireless Display Receiver
