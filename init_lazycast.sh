@@ -52,7 +52,7 @@ clear_everything() {
 	exit
 }
 
-trap clear_everything INT
+trap clear_everything INT TERM
 
 ALL_INTERFACES=$(list_wifi_interfaces)
 
