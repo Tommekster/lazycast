@@ -24,8 +24,9 @@ from time import sleep
 import sys
 import subprocess
 import argparse
+import codecs
 ##################### Settings #####################
-player_select = 0
+player_select = 1
 # 0: non-RPi systems. (using vlc or gstreamer)
 # 1: player1 has lower latency.
 # 2: player2 handles still images and sound better.
@@ -75,25 +76,25 @@ idrsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 idrsock.bind(idrsock_address)
 addr, idrsockport = idrsock.getsockname()
 
-data = (sock.recv(1000))
+data = str(sock.recv(1000))
 print ("---M1--->\n" + data)
 s_data = 'RTSP/1.0 200 OK\r\nCSeq: 1\r\nPublic: org.wfa.wfd1.0, SET_PARAMETER, GET_PARAMETER\r\n\r\n'
 print ("<--------\n" + s_data)
-sock.sendall(s_data)
+sock.sendall(bytes(s_data, encoding='utf-8'))
 
 
 # M2
 s_data = 'OPTIONS * RTSP/1.0\r\nCSeq: 1\r\nRequire: org.wfa.wfd1.0\r\n\r\n'
 print ("<---M2---\n" + s_data)
-sock.sendall(s_data)
+sock.sendall(bytes(s_data, encoding='utf-8'))
 
-data = (sock.recv(1000))
+data = str(sock.recv(1000))
 print ("-------->\n" + data)
 m2data = data
 
 
 # M3
-data=(sock.recv(1000))
+data=str(sock.recv(1000))
 print ("---M3--->\n" + data)
 
 msg = 'wfd_client_rtp_ports: RTP/AVP/UDP;unicast 1028 0 mode=play\r\n'
@@ -120,16 +121,14 @@ if runonpi and not os.path.exists('edid.txt'):
 
 edidlen = 0
 if os.path.exists('edid.txt'):
-	edidfile = open('edid.txt','r')
-	lines = edidfile.readlines()
+	edidfile = open('edid.txt','rb')
+	bytesequence = edidfile.read()
 	edidfile.close()
-	edidstr =''
-	for line in lines:
-		edidstr = edidstr + line
-	edidlen = len(edidstr)
+	edidstr = codecs.encode(bytesequence, 'hex')
+	edidlen = len(bytesequence)
 
 if 'wfd_display_edid' in data and edidlen != 0:
-	msg = msg + 'wfd_display_edid: ' + '{:04X}'.format(edidlen/256 + 1) + ' ' + str(edidstr.encode('hex'))+'\r\n'
+	msg = msg + 'wfd_display_edid: ' + '{:04X}'.format(int(edidlen/256) + 1) + ' ' + edidstr.decode('utf-8')+'\r\n'
 
 # if 'microsoft_latency_management_capability' in data:
 # 	msg = msg + 'microsoft-latency-management-capability: supported\r\n'
@@ -152,33 +151,33 @@ if 'intel_sink_device_URL' in data:
 
 m3resp ='RTSP/1.0 200 OK\r\nCSeq: 2\r\n'+'Content-Type: text/parameters\r\nContent-Length: '+str(len(msg))+'\r\n\r\n'+msg
 print ("<--------\n" + m3resp)
-sock.sendall(m3resp)
+sock.sendall(bytes(m3resp, encoding='utf-8'))
 
 
 # M4
-data=(sock.recv(1000))
-print ("---M4--->\n" + data)
+data=sock.recv(1000)
+print ("---M4--->\n" + str(data))
 
 s_data = 'RTSP/1.0 200 OK\r\nCSeq: 3\r\n\r\n'
 print ("<--------\n" + s_data)
-sock.sendall(s_data)
+sock.sendall(bytes(s_data, encoding='utf-8'))
 
 def uibcstart(sock, data):
 	#print (data)
-	messagelist=data.split('\r\n\r\n')
+	messagelist=data.split(b'\r\n\r\n')
 	for entry in messagelist:
-		if 'wfd_uibc_capability:' in entry:
-			entrylist = entry.split(';')
+		if b'wfd_uibc_capability:' in entry:
+			entrylist = entry.split(b';')
 			uibcport = entrylist[-1]
-			uibcport = uibcport.split('\r')
+			uibcport = uibcport.split(b'\r')
 			uibcport = uibcport[0]
-			uibcport = uibcport.split('=')
-			uibcport = uibcport[1]
+			uibcport = uibcport.split(b'=')
+			uibcport = uibcport[1].decode('utf-8')
 			print ('uibcport:'+uibcport+"\n")
 			if 'none' not in uibcport and enable_mouse_keyboard == 1:
 				os.system('pkill control.bin')
 				os.system('pkill controlhidc.bin')
-				if('hidc_cap_list=none' not in entry):
+				if(b'hidc_cap_list=none' not in entry):
 					os.system('./control/controlhidc.bin '+ uibcport + ' ' + sourceip + ' &')
 				elif('generic_cap_list=none' not in entry):
 					os.system('./control/control.bin '+ uibcport + ' &')
@@ -198,12 +197,12 @@ def killall(control):
                 os.system('pkill controlhidc.bin')
 
 # M5
-data=(sock.recv(1000))
+data=str(sock.recv(1000))
 print ("---M5--->\n" + data)
 
 s_data = 'RTSP/1.0 200 OK\r\nCSeq: 4\r\n\r\n'
 print ("<--------\n" + s_data)
-sock.sendall(s_data)
+sock.sendall(bytes(s_data, encoding='utf-8'))
 
 
 # M6
@@ -211,22 +210,22 @@ m6req ='SETUP rtsp://'+sourceip+'/wfd1.0/streamid=0 RTSP/1.0\r\n'\
 +'CSeq: 5\r\n'\
 +'Transport: RTP/AVP/UDP;unicast;client_port=1028\r\n\r\n'
 print ("<---M6---\n" + m6req)
-sock.sendall(m6req)
+sock.sendall(bytes(m6req, encoding='utf-8'))
 
-data=(sock.recv(1000))
-print ("-------->\n" + data)
+data=sock.recv(1000)
+print ("-------->\n" + str(data))
 
-paralist=data.split(';')
+paralist=data.split(b';')
 print (paralist)
-serverport=[x for x in paralist if 'server_port=' in x]
+serverport=[x for x in paralist if 'server_port=' in str(x)]
 print (serverport)
-serverport=serverport[-1]
+serverport=serverport[-1].decode('utf-8')
 serverport=serverport[12:17]
 print (serverport)
 
 paralist=data.split( )
-position=paralist.index('Session:')+1
-sessionid=paralist[position]
+position=paralist.index(b'Session:')+1
+sessionid=paralist[position].split(b';')[0].decode('utf-8')
 
 
 # M7
@@ -234,9 +233,9 @@ m7req ='PLAY rtsp://'+sourceip+'/wfd1.0/streamid=0 RTSP/1.0\r\n'\
 +'CSeq: 6\r\n'\
 +'Session: '+str(sessionid)+'\r\n\r\n'
 print ("<---M7---\n" + m7req)
-sock.sendall(m7req)
+sock.sendall(bytes(m7req, encoding='utf-8'))
 
-data=(sock.recv(1000))
+data=str(sock.recv(1000))
 print ("-------->\n" + data)
 
 print ("---- Negotiation successful ----")
@@ -286,7 +285,7 @@ csnum = 102
 watchdog = 0
 while True:
 	try:
-		data = (sock.recv(1000))
+		data = sock.recv(1000)
 	except socket.error as e:
 		err = e.args[0]
 		if err == errno.EAGAIN or err == errno.EWOULDBLOCK:
@@ -308,8 +307,8 @@ while True:
 				else:
 					sys.exit(1)
 			else:
-				print (datafromc)
-				elemfromc = datafromc.split(' ')				
+				print ("-------->\n" + str(datafromc))
+				elemfromc = str(datafromc).split(' ')				
 				if elemfromc[0] == 'recv':
 					killall(True)
 					sleep(1)
@@ -324,32 +323,32 @@ while True:
 					+msg
 	
 					print (idrreq)
-					sock.sendall(idrreq)
+					sock.sendall(bytes(idrreq, encoding='utf-8'))
 
 		else:
 			sys.exit(1)
 	else:
 		print (data)
 		watchdog = 0
-		if len(data)==0 or 'wfd_trigger_method: TEARDOWN' in data:
+		if len(data)==0 or b'wfd_trigger_method: TEARDOWN' in data:
 			killall(True)
 			sleep(1)
 			break
-		elif 'wfd_video_formats' in data:
+		elif b'wfd_video_formats' in data:
 			launchplayer(player_select)
-		messagelist=data.split('\r\n\r\n')
+		messagelist=data.split(b'\r\n\r\n')
 		print (messagelist)
-		singlemessagelist=[x for x in messagelist if ('GET_PARAMETER' in x or 'SET_PARAMETER' in x )]
+		singlemessagelist=[x for x in messagelist if (b'GET_PARAMETER' in x or b'SET_PARAMETER' in x )]
 		print (singlemessagelist)
 		for singlemessage in singlemessagelist:
-			entrylist=singlemessage.split('\r')
+			entrylist=singlemessage.split(b'\r')
 			for entry in entrylist:
-				if 'CSeq' in entry:
-					cseq = entry
+				if b'CSeq' in entry:
+					cseq = entry.decode('utf-8')
 
 			resp='RTSP/1.0 200 OK\r'+cseq+'\r\n\r\n';#cseq contains \n
 			print (resp)
-			sock.sendall(resp)
+			sock.sendall(bytes(resp, encoding='utf-8'))
 		
 		uibcstart(sock,data)
 
