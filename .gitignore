@@ -5,3 +5,4 @@ udhcpd.conf
 uuid.txt
 edid.txt
 PIN
+venv/*
