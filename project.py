@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 """
 	This software is part of lazycast, a simple wireless display receiver for Raspberry Pi
 	Copyright (C) 2020 Hsun-Wei Cho
@@ -49,12 +49,12 @@ else:
 	uuidfile.close()
 
 hostname = socket.gethostname() 
-print 'The hostname of this machine is: '+hostname
+print('The hostname of this machine is: '+hostname)
 
-print uuidstr
+print(uuidstr)
 
 dnsstr = 'avahi-publish-service '+hostname+' _display._tcp 7250 container_id={'+uuidstr+'}'
-print dnsstr
+print(dnsstr)
 os.system(dnsstr+' &')
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -73,7 +73,7 @@ while True:
 	while True:
 		data = conn.recv(1024)
 		# print data
-		print data.encode('hex')
+		print(data.encode('hex'))
 
 		if data == '':
 			break
@@ -85,7 +85,7 @@ while True:
 		print (size,version,command)
 		
 		messagetype = commands[command]
-		print messagetype
+		print(messagetype)
 
 		if messagetype == 'SOURCE_READY':
 			os.system('./d2.py '+sourceip+' &')
@@ -99,9 +99,9 @@ while True:
 			i = i+3+valuelen
 			print (tlvtypehex,valuelen)
 			tlvtype = types[tlvtypehex]
-			print tlvtype,
+			print(tlvtype)
 			if tlvtype == 'FRIENDLY_NAME':
-				print value
+				print(value)
 
 
 		# conn.send(data)

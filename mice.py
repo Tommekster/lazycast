@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 """
 	This software is part of lazycast, a simple wireless display receiver for Raspberry Pi
 	Copyright (C) 2020 Hsun-Wei Cho
@@ -20,7 +20,7 @@
 import dbus
 import sys, os
 import time
-import gobject
+from gi.repository import GObject
 import threading
 import socket
 from dbus.mainloop.glib import DBusGMainLoop
@@ -58,10 +58,10 @@ if len(ipelems)>1 and ipstr == '':
 
 def groupStarted(properties):
 
-	print "groupStarted: " + str(properties)
+	print(f"groupStarted: {properties}")
 	g_obj = dbus.SystemBus().get_object('fi.w1.wpa_supplicant1',properties['group_object'])
 	res = g_obj.GetAll('fi.w1.wpa_supplicant1.Group', dbus_interface=dbus.PROPERTIES_IFACE, byte_arrays=True)
-	print "Group properties: " + str(res)
+	print(f"Group properties: {res}")
 	
 	hostnamehex = hostname.encode('hex')
 	hostnamemessage = '2002'+'{:04X}'.format(len(hostname))+hostnamehex
@@ -84,7 +84,7 @@ def groupStarted(properties):
 
 	g_obj = dbus.SystemBus().get_object('fi.w1.wpa_supplicant1',properties['group_object'])
 	res = g_obj.GetAll('fi.w1.wpa_supplicant1.Group', dbus_interface=dbus.PROPERTIES_IFACE, byte_arrays=True)
-	print "Group properties: " + str(res)
+	print(f"Group properties: {res}")
 
 	event.set()
 	
@@ -93,7 +93,7 @@ def groupStarted(properties):
 
 
 def WpsFailure(status, etc):
-	print("WPS Authentication Failure".format(status))
+	print("WPS Authentication Failure {}".format(status))
 	print(etc)
 	os._exit(0)
 
@@ -145,7 +145,6 @@ class P2P_Group_Add (threading.Thread):
 		except dbus.DBusException as exc:
 			error = 'Error:\n  Interface ' + self.interface_name + ' was not found'
 			print(error)
-			usage()
 			os._exit(0)
 
 		self.interface_object = self.bus.get_object(self.wpas_dbus_interface, self.path)
@@ -161,7 +160,7 @@ class P2P_Group_Add (threading.Thread):
 
 		props = self.interface_object.GetAll(self.wpas_dbus_interfaces_p2pdevice,dbus_interface=dbus.PROPERTIES_IFACE)
 		print(props)
-		print ''	
+		print('')
 
 		dbus.Interface(self.interface_object, dbus_interface=dbus.PROPERTIES_IFACE).Set(self.wpas_dbus_interfaces_p2pdevice, 'P2PDeviceConfig',dbus.Dictionary({ 'DeviceName' : hostname},signature='sv'))
 
@@ -171,7 +170,7 @@ class P2P_Group_Add (threading.Thread):
 
 		props = self.wpas_object.GetAll('fi.w1.wpa_supplicant1',dbus_interface=dbus.PROPERTIES_IFACE)
 		print(props)
-		print ''	
+		print('')
 
 	def run(self):
 
@@ -180,13 +179,13 @@ class P2P_Group_Add (threading.Thread):
 			self.interfacep2pdevice.GroupAdd(groupadddict)
 		except:
 			print('Warning:\n  Could not preform group add')
-			print 'If existing beacon does not function properly, run ./removep2p.sh first.'
-			print 'Now running ./project.py'
+			print('If existing beacon does not function properly, run ./removep2p.sh first.')
+			print('Now running ./project.py')
 			event.set()
 
-		gobject.MainLoop().get_context().iteration(True)
-		gobject.threads_init()
-		gobject.MainLoop().run()
+		GObject.MainLoop().get_context().iteration(True)
+		GObject.threads_init()
+		GObject.MainLoop().run()
 
 
 
@@ -210,7 +209,9 @@ if __name__ == "__main__":
 	if concurrent == 1:
 		os.system('./all.sh &')
 
-	execfile('project.py')
+	with open('project.py', "rb") as source_file:
+		code = compile(source_file.read(), 'project.py', "exec")
+		exec(code, globals, locals)
 
 	# print("Error:\n  Group formation timed out")
 	# os._exit(0)
